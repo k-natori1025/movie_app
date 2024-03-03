@@ -1,12 +1,98 @@
 import AppLayout from '@/components/Layouts/AppLayout'
-import { Box, Container, Grid, Typography } from '@mui/material'
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Container,
+    Fab,
+    Grid,
+    Modal,
+    Rating,
+    TextareaAutosize,
+    Tooltip,
+    Typography,
+} from '@mui/material'
 import axios from 'axios'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Head from 'next/head'
+import laravelAxios from '@/lib/laravelAxios'
+import AddIcon from '@mui/icons-material/Add'
 
-const Detail = ({ detail, media_type }) => {
-    console.log(detail)
-    console.log(detail.backdrop_path)
+const Detail = ({ detail, media_type, media_id }) => {
+    const [open, setOpen] = useState(false) // モーダルウィンドウを表示するかどうかのstate
+    const [rating, setRating] = useState(0)
+    const [review, setReview] = useState('')
+    const handleOpen = () => {
+        setOpen(true)
+    }
+    const handleClose = () => {
+        setOpen(false)
+    }
+    const handleReviewChange = e => {
+        setReview(e.target.value)
+        console.log(review)
+    }
+    const handleRatingChange = (e, newValue) => {
+        setRating(newValue)
+        console.log(rating)
+    }
+    //ratingが0ならfalseになるので!ratingでisDisabledにtrueが入る
+    //reviewが空or空文字の場合はreviewはfalseなのでisDisabledにtrueが入る
+    const isDisabled = !rating || !review.trim()
+    const handleReviewAdd = async () => {
+        try {
+            const response = await laravelAxios.post(`api/reviews`, {
+                content: review,
+                rating: rating,
+                media_type: media_type,
+                media_id: media_id,
+            })
+        } catch (err) {
+            console.log(err)
+        }
+    }
+    // const [reviews, setReviews] = useState([])
+    const reviews = [
+        {
+            id: 1,
+            content: 'まあまあ面白かった',
+            rating: 4,
+            user: {
+                name: 'Aさん',
+            },
+        },
+        {
+            id: 2,
+            content: '普通でした',
+            rating: 3,
+            user: {
+                name: 'Bさん',
+            },
+        },
+        {
+            id: 3,
+            content: 'つまらなかった',
+            rating: 2,
+            user: {
+                name: 'cさん',
+            },
+        },
+    ]
+    useEffect(() => {
+        const fetchReviews = async () => {
+            try {
+                const response = await laravelAxios.get(
+                    `api/reviews/${media_type}/${media_id}`,
+                )
+                console.log(response.data)
+                // setReviews(response.data)
+            } catch (err) {
+                console.log(err)
+            }
+        }
+        fetchReviews()
+    }, [media_type, media_id])
     return (
         <AppLayout
             header={
@@ -25,6 +111,7 @@ const Detail = ({ detail, media_type }) => {
                     display: 'flex',
                     alignItems: 'center',
                 }}>
+                {/* 映画/TV番組情報表示 */}
                 <Box
                     sx={{
                         backgroundImage: `url(https://image.tmdb.org/t/p/original${detail.backdrop_path})`,
@@ -48,7 +135,7 @@ const Detail = ({ detail, media_type }) => {
                         },
                     }}
                 />
-
+                {/* 映画/TV番組情報中身 */}
                 <Container sx={{ zIndex: 1 }}>
                     <Grid container alignItems={'center'}>
                         <Grid
@@ -77,6 +164,92 @@ const Detail = ({ detail, media_type }) => {
                     </Grid>
                 </Container>
             </Box>
+            {/* レビュー内容表示 */}
+            <Container sx={{ py: 4 }}>
+                <Typography
+                    component={'h1'}
+                    variant="h4"
+                    align="center"
+                    gutterBottom>
+                    レビュー一覧
+                </Typography>
+                <Grid container spacing={3}>
+                    {reviews.map(review => (
+                        <Grid item xs={12} key={review.id}>
+                            <Card>
+                                <CardContent>
+                                    <Typography
+                                        variant="h6"
+                                        component={'div'}
+                                        gutterBottom>
+                                        {review.user.name}
+                                    </Typography>
+
+                                    <Rating value={review.rating} readOnly />
+
+                                    <Typography
+                                        variant="body2"
+                                        color="textSecondary"
+                                        paragraph>
+                                        {review.content}
+                                    </Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+            </Container>
+            {/* レビュー追加ボタン */}
+            <Box
+                sx={{
+                    position: 'fixed',
+                    bottom: '16px',
+                    right: '16px',
+                    zIndex: 5,
+                }}>
+                <Tooltip title="レビュー追加">
+                    <Fab
+                        style={{ background: '#1976d2', color: 'white' }}
+                        onClick={handleOpen}>
+                        <AddIcon />
+                    </Fab>
+                </Tooltip>
+            </Box>
+            {/* レビュー追加モーダル */}
+            <Modal open={open} onClose={handleClose}>
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        border: '2px solid #000',
+                        boxShadow: 24,
+                        p: 4,
+                    }}>
+                    <Typography variant="h6" component="h2">
+                        レビューを書く
+                    </Typography>
+                    <Rating
+                        required
+                        onChange={handleRatingChange}
+                        value={rating}
+                    />
+                    <TextareaAutosize
+                        required
+                        minRows={5}
+                        placeholder="レビュー内容"
+                        style={{ width: '100%', marginTop: '10px' }}
+                        onChange={handleReviewChange}
+                        value={review}
+                    />
+                    <Button variant="outlined" disabled={isDisabled} onClick={handleReviewAdd}>
+                        送信
+                    </Button>
+                </Box>
+            </Modal>
         </AppLayout>
     )
 }
