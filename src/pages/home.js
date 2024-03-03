@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import 'swiper/css'
 import { CardActionArea, CardMedia, Typography } from '@mui/material'
+import Link from 'next/link'
+import SearchBar from '@/components/SearchBar'
 
 const Home = () => {
     const [movies, setMovies] = useState([])
@@ -33,6 +35,7 @@ const Home = () => {
                 <title>Laravel - Home</title>
             </Head>
 
+            <SearchBar />
             <Swiper
                 spaceBetween={30}
                 slidesPerView={5}
@@ -63,14 +66,16 @@ const Home = () => {
                 {movies.map(movie => (
                     // eslint-disable-next-line react/jsx-key
                     <SwiperSlide key={movie.id}>
-                        <CardActionArea>
-                            <CardMedia
-                                component={'img'}
-                                sx={{ aspectRatio: '2/3' }}
-                                image={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
-                                alt={movie.title}
-                            />
-                        </CardActionArea>
+                        <Link href={`detail/movie/${movie.id}`}>
+                            <CardActionArea>
+                                <CardMedia
+                                    component={'img'}
+                                    sx={{ aspectRatio: '2/3' }}
+                                    image={`https://image.tmdb.org/t/p/original${movie.poster_path}`}
+                                    alt={movie.title}
+                                />
+                            </CardActionArea>
+                        </Link>
                         <Typography>公開日: {movie.release_date}</Typography>
                     </SwiperSlide>
                 ))}
