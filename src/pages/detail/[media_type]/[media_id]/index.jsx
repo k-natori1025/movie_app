@@ -23,6 +23,7 @@ const Detail = ({ detail, media_type, media_id }) => {
     const [open, setOpen] = useState(false) // モーダルウィンドウを表示するかどうかのstate
     const [rating, setRating] = useState(0)
     const [review, setReview] = useState('')
+    const [reviews, setReviews] = useState([])
     const handleOpen = () => {
         setOpen(true)
     }
@@ -48,37 +49,16 @@ const Detail = ({ detail, media_type, media_id }) => {
                 media_type: media_type,
                 media_id: media_id,
             })
+            const newReview = response.data
+            setReviews([...reviews, newReview])
+            setOpen(false)
+            setReview('')
+            setRating(0)
         } catch (err) {
             console.log(err)
         }
     }
-    // const [reviews, setReviews] = useState([])
-    const reviews = [
-        {
-            id: 1,
-            content: 'まあまあ面白かった',
-            rating: 4,
-            user: {
-                name: 'Aさん',
-            },
-        },
-        {
-            id: 2,
-            content: '普通でした',
-            rating: 3,
-            user: {
-                name: 'Bさん',
-            },
-        },
-        {
-            id: 3,
-            content: 'つまらなかった',
-            rating: 2,
-            user: {
-                name: 'cさん',
-            },
-        },
-    ]
+
     useEffect(() => {
         const fetchReviews = async () => {
             try {
@@ -86,7 +66,7 @@ const Detail = ({ detail, media_type, media_id }) => {
                     `api/reviews/${media_type}/${media_id}`,
                 )
                 console.log(response.data)
-                // setReviews(response.data)
+                setReviews(response.data)
             } catch (err) {
                 console.log(err)
             }
@@ -245,7 +225,10 @@ const Detail = ({ detail, media_type, media_id }) => {
                         onChange={handleReviewChange}
                         value={review}
                     />
-                    <Button variant="outlined" disabled={isDisabled} onClick={handleReviewAdd}>
+                    <Button
+                        variant="outlined"
+                        disabled={isDisabled}
+                        onClick={handleReviewAdd}>
                         送信
                     </Button>
                 </Box>
